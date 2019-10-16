@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Oct 11 13:04:19 2019
+
+@author: rgamerocruz
+Tarea voluntaria 16oct19
+
+Partiendo del dataset "abny_pep2019.csv"  recodifica la variable  original "price"  (originalmente cuantitativa), 
+en una nueva variable ordinal  "price_ord" con 4 clases de precios: low, mid_low, mid_high, high
+De tal maera que cada clase contenga un numero similar de casos.
+Una vez creada, describe la variable "price" con las herramientas numéricas y gráficas que consideres adecuadas.
+Pista: ¿Qué precios definen los puntos de corte entre las cuatro clases?
+Adjunta en un anexo al informe el script de python que has empleado para la resolución del ejercicio
+
+"""
+
+# ----------------LOAD LIBRARIES---------------------------------------
+import os 
+import pandas as pd 
+import numpy as np
+import matplotlib.pyplot as plt 
+
+# ---------------DEFINE VARIABLES DIRECTORY-----------------------------------
+os.getcwd()
+os.chdir('/Users/rgamerocruz/Documents/EDEM_MDA_2019/02_CLASES/Python_AlbertoSanz/Dataset_Script')
+os.getcwd()
+#QC OK
+
+# ---------------LOAD CSV INTO A PANDA DATAFRAME -----------------------------------
+### Open CSV with NOTEPAD ++ and Check CSV format (; , or , .) 
+### Load using Panda Library (adjust CODE accordingly to Column and Decimal Separators)
+wbr = pd.read_csv ("abny_pep2019.csv", sep=',', decimal='.')
+#QC OK
+### Analyze the dataframe (codigo + open en el Explorador de variables)
+wbr.shape  ## obtengo num filas x num columnas
+wbr.size    ## obtengo num total de elementos
+wbr.ndim   ## se si la BD es uni o multidimensional (serie, 1 variable) 2 (dataframe, +variables)
+wbr.dtypes  ## define el tipo de variables int64, object, float64)
+list(wbr.columns)
+wbr.head()
+wbr.tail()
+wbr.isnull().sum()    ## numero de valores NaN por columna
+#QC OK
+
+# --------------- BASIC VARIABLE ANALYSIS (PRICE) --------------------------------------------
+
+# --------------- ELIMINAMOS PRECIOS NEGATIVOS O CERO --------------------------------------------
+
+wbr1=wbr.drop(wbr.index[wbr.price<=0]) ### SIEMPRE POR COLUMN LABEL or ROW INDEx
+
+# --------------- ELIMINAMOS PRECIOS NaN --------------------------------------------
+
+wbr2=wbr1.dropna (subset=['price'])
+
+# --------------- DEFINICION DEL NUEVO DATASET Y CLEAN-UP --------------------------------------------
+
+wbr_clean_price=wbr2
+del(wbr,wbr1,wbr2)
+
+
+# ------------ CONVERSION A VARIABLE NOMINAL USING QCUT (PERCENTILES)  --------------------------------------------
+
+#### definicion de "price_ord" con 4 clases de precios: low, mid_low, mid_high, high usando percentiles
+
+bin_labels_4 = ['low', 'mid_low', 'mid_high', 'high']
+wbr_clean_price ['price_ord'] = pd.qcut(wbr_clean_price['price'], q=[0, .25, .5, .75, 1],labels=bin_labels_4)
+wbr_clean_price.price_ord.value_counts()
+
+### PLOT QCUT NEW VARIABLE *bar*
+# CROSSTAB 
+price_ord_table= pd.crosstab(index=wbr_clean_price.price_ord, columns='nr. stays',rownames=['price category'])
+print(price_ord_table)
+sum_price_ord = price_ord_table.sum()
+print(sum_price_ord)
+price_ord_table_percent = (price_ord_table/sum_price_ord)*100
+price_ord_table_percent
+
+# BAR PLOT
+
+plt.bar (price_ord_table_percent.index, price_ord_table_percent ['nr. stays'])
+
+plt.minorticks_on()
+plt.grid(axis='y',which='minor',linestyle=':', linewidth='0.5', color='grey')
+plt.grid(axis='y',which='major',linestyle='-', linewidth='1', color='grey')
+plt.title ('Figure 1 Nr. Stays per Price Category',loc='center')
+plt.ylabel ('Percentage of Stays')
+plt.xlabel ('Price Category')
+plt.ylim([24.5,25.5])
+
+textstr ='Source:' '\n' 'abnypep.csv'
+props = dict(boxstyle='round', facecolor='pink', lw=0.5) 
+plt.text (2.4,25.35, textstr , color='red', weight='bold',fontstyle ='italic', bbox=props)
+
+
+
+# ------------ CONVERSION A VARIABLE NOMINAL USING CUT (min 50%  mean 75% max)  --------------------------------------------
+
+#### definicion de "price_ord" con 4 clases de precios: low, mid_low, mid_high, high usando valores definidos por mi
+
+bin_labels_4 = ['low', 'mid_low', 'mid_high', 'high']
+wbr_clean_price.price.describe()
+cut_bins = [10,106,152.76,175,10000]
+wbr_clean_price ['price_ord_2'] = pd.cut(wbr_clean_price['price'], bins=cut_bins,labels=bin_labels_4)
+wbr_clean_price.price_ord_2.value_counts()
+
+
+
+### PLOT QCUT NEW VARIABLE *bar*
+# CROSSTAB 
+price_ord_2_table= pd.crosstab(index=wbr_clean_price.price_ord_2, columns='nr. stays',rownames=['price category'])
+print(price_ord_2_table)
+sum_price_ord_2 = price_ord_2_table.sum()
+print(sum_price_ord_2)
+price_ord_2_table_percent = (price_ord_2_table/sum_price_ord_2)*100
+price_ord_2_table_percent
+
+# BAR PLOT
+
+plt.bar (price_ord_2_table_percent.index, price_ord_2_table_percent ['nr. stays'])
+
+plt.minorticks_on()
+plt.grid(axis='y',which='minor',linestyle=':', linewidth='0.5', color='grey')
+plt.grid(axis='y',which='major',linestyle='-', linewidth='1', color='grey')
+plt.title ('Figure 1 Nr. Stays per Price Category',loc='center')
+plt.ylabel ('Percentage of Stays')
+plt.xlabel ('Price Category')
+
+
+textstr ='Source:' '\n' 'abnypep.csv'
+props = dict(boxstyle='round', facecolor='pink', lw=0.5) 
+plt.text (2.5,45, textstr , color='red', weight='bold',fontstyle ='italic', bbox=props)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
